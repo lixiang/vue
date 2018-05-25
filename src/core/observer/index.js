@@ -33,21 +33,19 @@ export const observerState = {
  * collect dependencies and dispatches updates.
  */
 export class Observer {
-  value: any;
-  dep: Dep;
-  vmCount: number; // number of vms that has this object as root $data
+  value: any
+  dep: Dep
+  vmCount: number // number of vms that has this object as root $data
 
   constructor (value: any) {
     this.value = value
-    this.dep = new Dep()
+    this.dep = new Dep() // 一个observer对应一个dep
     this.vmCount = 0
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
-      const augment = hasProto
-        ? protoAugment
-        : copyAugment
+      const augment = hasProto ? protoAugment : copyAugment
       augment(value, arrayMethods, arrayKeys)
-      this.observeArray(value)
+      this.observeArray(value) // 数组的话递归设置属性
     } else {
       this.walk(value)
     }
@@ -148,13 +146,14 @@ export function defineReactive (
   const setter = property && property.set
 
   let childOb = !shallow && observe(val)
+  // 监听数据属性值，动态添加getter/setter 可枚举 可设置
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
-        dep.depend()
+        dep.depend() // 建立内部关联
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
@@ -202,10 +201,11 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   }
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
-    process.env.NODE_ENV !== 'production' && warn(
-      'Avoid adding reactive properties to a Vue instance or its root $data ' +
-      'at runtime - declare it upfront in the data option.'
-    )
+    process.env.NODE_ENV !== 'production' &&
+      warn(
+        'Avoid adding reactive properties to a Vue instance or its root $data ' +
+          'at runtime - declare it upfront in the data option.'
+      )
     return val
   }
   if (!ob) {
@@ -227,10 +227,11 @@ export function del (target: Array<any> | Object, key: any) {
   }
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
-    process.env.NODE_ENV !== 'production' && warn(
-      'Avoid deleting properties on a Vue instance or its root $data ' +
-      '- just set it to null.'
-    )
+    process.env.NODE_ENV !== 'production' &&
+      warn(
+        'Avoid deleting properties on a Vue instance or its root $data ' +
+          '- just set it to null.'
+      )
     return
   }
   if (!hasOwn(target, key)) {

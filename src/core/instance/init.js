@@ -19,6 +19,7 @@ export function initMixin (Vue: Class<Component>) {
     vm._uid = uid++
 
     let startTag, endTag
+    // 性能统计相关
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
@@ -71,8 +72,11 @@ export function initMixin (Vue: Class<Component>) {
   }
 }
 
-function initInternalComponent (vm: Component, options: InternalComponentOptions) {
-  const opts = vm.$options = Object.create(vm.constructor.options)
+function initInternalComponent (
+  vm: Component,
+  options: InternalComponentOptions
+) {
+  const opts = (vm.$options = Object.create(vm.constructor.options))
   // doing this because it's faster than dynamic enumeration.
   opts.parent = options.parent
   opts.propsData = options.propsData

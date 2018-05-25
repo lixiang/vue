@@ -3,16 +3,16 @@
 import type Watcher from './watcher'
 import { remove } from '../util/index'
 
-let uid = 0
+let uid = 0 // 作为唯一标示
 
 /**
  * A dep is an observable that can have multiple
  * directives subscribing to it.
  */
 export default class Dep {
-  static target: ?Watcher;
-  id: number;
-  subs: Array<Watcher>;
+  static target: ?Watcher
+  id: number
+  subs: Array<Watcher> // 保存watcher的数组
 
   constructor () {
     this.id = uid++

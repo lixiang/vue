@@ -2,7 +2,7 @@
 
 ## debug
 
-1.定位 build/config.js 
+1. 找到build/config.js 
 
 2.找到 genConfig 方法,添加 sourceMap:true
 
@@ -29,4 +29,30 @@ function genConfig (name) {
 
 ## 入口文件
 
-`src/core/instance/index.js`
+[src/core/instance/index.js](src/core/instance/index.js)
+
+## 双向数据绑定
+
+核心 `Object.defineProperty()`
+
+实现分为3部分
+
+1.`Observer（监听器）`: 递归的监听所有的对象属性，如果属性值有变化，触发其`watcher`
+
+2.`Watcher（观察者）`: 当监听属性值有变化，则执行相应回调函数，更新vue模板
+
+3.`Dep（订阅者）`: 负责连接 `observer`和 `watcher` ，一个`observe`对应一个`dep`，内部维护一个数组，用来保存该`observer`和相关`watcher`
+
+
+
+源码分别在 
+
+observer: core/observer/index.js
+
+watcher:core/observer/watcher.js
+
+dep:core/observer/dep.js
+
+## 模板解析
+
+## Vdom

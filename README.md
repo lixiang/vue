@@ -47,11 +47,11 @@ function genConfig (name) {
 
 源码分别在 
 
-observer: [core/observer/index.js](core/observer/index.js)
+observer: [core/observer/index.js](https://github.com/lixiang/vue/blob/63bf4334664117f3c462964878dcbc2cad51c0c7/src/core/observer/index.js)
 
-watcher:[core/observer/watcher.js](core/observer/watcher.js)
+watcher:[core/observer/watcher.js](https://github.com/lixiang/vue/blob/63bf4334664117f3c462964878dcbc2cad51c0c7/src/core/observer/watcher.js)
 
-dep:[core/observer/dep.js](core/observer/dep.js)
+dep:[core/observer/dep.js](https://github.com/lixiang/vue/blob/63bf4334664117f3c462964878dcbc2cad51c0c7/src/core/observer/dep.js)
 
 ## 模板解析
 

@@ -47,11 +47,11 @@ function genConfig (name) {
 
 源码分别在 
 
-observer: core/observer/index.js
+observer: [core/observer/index.js](core/observer/index.js)
 
-watcher:core/observer/watcher.js
+watcher:[core/observer/watcher.js](core/observer/watcher.js)
 
-dep:core/observer/dep.js
+dep:[core/observer/dep.js](core/observer/dep.js)
 
 ## 模板解析
 

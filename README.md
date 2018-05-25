@@ -33,7 +33,7 @@ function genConfig (name) {
 
 ## 双向数据绑定
 
-
+![](https://github.com/lixiang/vue/blob/3f9e263babd12d324ff226078fee7d4d83b2b6f1/img/vue1.jpg)
 
 核心 `Object.defineProperty()`
 

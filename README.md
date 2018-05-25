@@ -33,6 +33,8 @@ function genConfig (name) {
 
 ## 双向数据绑定
 
+
+
 核心 `Object.defineProperty()`
 
 实现分为3部分

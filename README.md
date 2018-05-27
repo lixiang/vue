@@ -57,4 +57,14 @@ dep:[core/observer/dep.js](https://github.com/lixiang/vue/blob/63bf4334664117f3c
 
 ## 模板解析
 
-## Vdom
+实现也分为3部分
+1.`parse`:parse会用正则方式将 `template`模板里进行字符串解析，得到指令，class，style等数据，形成`AST`.
+2.`optimize`:优化代码.
+3.`generate`:将优化后的`AST` 转化成`render function`.
+
+源码在
+[src/compiler/index.js](https://github.com/lixiang/vue/blob/9e3c18a3e5beecd8ded269f110852698dacc6eb5/src/compiler/index.js)
+
+## VDom
+
+vue.js VDom 这块基于 [snabbdom](https://github.com/snabbdom/snabbdom) 实现，并做了优化

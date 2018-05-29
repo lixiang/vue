@@ -1,6 +1,6 @@
 /*!
  * Vue.js v2.5.0
- * (c) 2014-2017 Evan You
+ * (c) 2014-2018 Evan You
  * Released under the MIT License.
  */
 (function (global, factory) {
@@ -610,7 +610,6 @@ function logError (err, vm, info) {
 /*  */
 /* globals MessageChannel */
 
-// can we use __proto__?
 var hasProto = '__proto__' in {};
 
 // Browser environment sniffing
@@ -779,7 +778,7 @@ if (typeof Set !== 'undefined' && isNative(Set)) {
 /*  */
 
 
-var uid = 0;
+var uid = 0; // 作为唯一标示
 
 /**
  * A dep is an observable that can have multiple
@@ -812,9 +811,6 @@ Dep.prototype.notify = function notify () {
   }
 };
 
-// the current target watcher being evaluated.
-// this is globally unique because there could be only one
-// watcher being evaluated at any time.
 Dep.target = null;
 var targetStack = [];
 
@@ -985,15 +981,13 @@ var observerState = {
  */
 var Observer = function Observer (value) {
   this.value = value;
-  this.dep = new Dep();
+  this.dep = new Dep(); // 一个observer对应一个dep
   this.vmCount = 0;
   def(value, '__ob__', this);
   if (Array.isArray(value)) {
-    var augment = hasProto
-      ? protoAugment
-      : copyAugment;
+    var augment = hasProto ? protoAugment : copyAugment;
     augment(value, arrayMethods, arrayKeys);
-    this.observeArray(value);
+    this.observeArray(value); // 数组的话递归设置属性
   } else {
     this.walk(value);
   }
@@ -1093,13 +1087,14 @@ function defineReactive (
   var setter = property && property.set;
 
   var childOb = !shallow && observe(val);
+  // 监听数据属性值，动态添加getter/setter 可枚举 可设置
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
       var value = getter ? getter.call(obj) : val;
       if (Dep.target) {
-        dep.depend();
+        dep.depend(); // 建立内部关联
         if (childOb) {
           childOb.dep.depend();
           if (Array.isArray(value)) {
@@ -1147,10 +1142,11 @@ function set (target, key, val) {
   }
   var ob = (target).__ob__;
   if (target._isVue || (ob && ob.vmCount)) {
-    "development" !== 'production' && warn(
-      'Avoid adding reactive properties to a Vue instance or its root $data ' +
-      'at runtime - declare it upfront in the data option.'
-    );
+    "development" !== 'production' &&
+      warn(
+        'Avoid adding reactive properties to a Vue instance or its root $data ' +
+          'at runtime - declare it upfront in the data option.'
+      );
     return val
   }
   if (!ob) {
@@ -1172,10 +1168,11 @@ function del (target, key) {
   }
   var ob = (target).__ob__;
   if (target._isVue || (ob && ob.vmCount)) {
-    "development" !== 'production' && warn(
-      'Avoid deleting properties on a Vue instance or its root $data ' +
-      '- just set it to null.'
-    );
+    "development" !== 'production' &&
+      warn(
+        'Avoid deleting properties on a Vue instance or its root $data ' +
+          '- just set it to null.'
+      );
     return
   }
   if (!hasOwn(target, key)) {
@@ -1204,11 +1201,6 @@ function dependArray (value) {
 
 /*  */
 
-/**
- * Option overwriting strategies are functions that handle
- * how to merge a parent option value and a child option
- * value into the final value.
- */
 var strats = config.optionMergeStrategies;
 
 /**
@@ -2053,18 +2045,6 @@ function checkProp (
 
 /*  */
 
-// The template compiler attempts to minimize the need for normalization by
-// statically analyzing the template at compile time.
-//
-// For plain HTML markup, normalization can be completely skipped because the
-// generated render function is guaranteed to return Array<VNode>. There are
-// two cases where extra normalization is needed:
-
-// 1. When the children contains components - because a functional component
-// may return an Array instead of a single root. In this case, just a simple
-// normalization is needed - if any child is an Array, we flatten the whole
-// thing with Array.prototype.concat. It is guaranteed to be only 1-level deep
-// because functional components already normalize their own children.
 function simpleNormalizeChildren (children) {
   for (var i = 0; i < children.length; i++) {
     if (Array.isArray(children[i])) {
@@ -3143,11 +3123,6 @@ Watcher.prototype.teardown = function teardown () {
   }
 };
 
-/**
- * Recursively traverse an object to evoke all converted
- * getters, so that every nested property inside the object
- * is collected as a "deep" dependency.
- */
 var seenObjects = new _Set();
 function traverse (val) {
   seenObjects.clear();
@@ -3574,9 +3549,6 @@ function resolveInject (inject, vm) {
 
 /*  */
 
-/**
- * Runtime helper for rendering v-for lists.
- */
 function renderList (
   val,
   render
@@ -3608,9 +3580,6 @@ function renderList (
 
 /*  */
 
-/**
- * Runtime helper for rendering <slot>
- */
 function renderSlot (
   name,
   fallback,
@@ -3647,20 +3616,12 @@ function renderSlot (
 
 /*  */
 
-/**
- * Runtime helper for resolving filters
- */
 function resolveFilter (id) {
   return resolveAsset(this.$options, 'filters', id, true) || identity
 }
 
 /*  */
 
-/**
- * Runtime helper for checking keyCodes from config.
- * exposed as Vue.prototype._k
- * passing in eventKeyName as last argument separately for backwards compat
- */
 function checkKeyCodes (
   eventKeyCode,
   key,
@@ -3681,9 +3642,6 @@ function checkKeyCodes (
 
 /*  */
 
-/**
- * Runtime helper for merging v-bind="object" into a VNode's data.
- */
 function bindObjectProps (
   data,
   tag,
@@ -3735,9 +3693,6 @@ function bindObjectProps (
 
 /*  */
 
-/**
- * Runtime helper for rendering static trees.
- */
 function renderStatic (
   index,
   isInFor
@@ -3933,7 +3888,6 @@ function mergeProps (to, from) {
 
 /*  */
 
-// hooks to be invoked on component VNodes during patch
 var componentVNodeHooks = {
   init: function init (
     vnode,
@@ -4396,6 +4350,7 @@ function initMixin (Vue) {
     vm._uid = uid$1++;
 
     var startTag, endTag;
+    // 性能统计相关
     /* istanbul ignore if */
     if ("development" !== 'production' && config.performance && mark) {
       startTag = "vue-perf-start:" + (vm._uid);
@@ -4446,8 +4401,11 @@ function initMixin (Vue) {
   };
 }
 
-function initInternalComponent (vm, options) {
-  var opts = vm.$options = Object.create(vm.constructor.options);
+function initInternalComponent (
+  vm,
+  options
+) {
+  var opts = (vm.$options = Object.create(vm.constructor.options));
   // doing this because it's faster than dynamic enumeration.
   opts.parent = options.parent;
   opts.propsData = options.propsData;
@@ -4521,19 +4479,18 @@ function dedupe (latest, extended, sealed) {
 }
 
 function Vue$3 (options) {
-  if ("development" !== 'production' &&
-    !(this instanceof Vue$3)
-  ) {
+  // 首先判断如果是不是生产环境，且不是通过new关键字来创建对象的话，就在控制台打印一个warning
+  if ("development" !== 'production' && !(this instanceof Vue$3)) {
     warn('Vue is a constructor and should be called with the `new` keyword');
   }
   this._init(options);
 }
 
-initMixin(Vue$3);
-stateMixin(Vue$3);
-eventsMixin(Vue$3);
-lifecycleMixin(Vue$3);
-renderMixin(Vue$3);
+initMixin(Vue$3); // _init
+stateMixin(Vue$3); // $set、$delete、$watch
+eventsMixin(Vue$3); // $on、$once、$off、$emit
+lifecycleMixin(Vue$3); // _update、$forceUpdate、$destroy
+renderMixin(Vue$3); // $nextTick、_render、以及多个内部调用的方法
 
 /*  */
 
@@ -4890,8 +4847,6 @@ Vue$3.version = '2.5.0';
 
 /*  */
 
-// these are reserved for web because they are directly compiled away
-// during template compilation
 var isReservedAttr = makeMap('style,class');
 
 // attributes that should be using props for binding
@@ -5088,9 +5043,6 @@ var isTextInputType = makeMap('text,number,password,search,email,tel,url');
 
 /*  */
 
-/**
- * Query an element selector if it's not an element already.
- */
 function query (el) {
   if (typeof el === 'string') {
     var selected = document.querySelector(el);
@@ -6694,10 +6646,6 @@ function genDefaultModel (
 
 /*  */
 
-// normalize v-model event tokens that can only be determined at runtime.
-// it's important to place the event as the first in the array because
-// the whole point is ensuring the v-model callback gets called before
-// user-attached handlers.
 function normalizeEvents (on) {
   /* istanbul ignore if */
   if (isDef(on[RANGE_TOKEN])) {
@@ -7578,8 +7526,6 @@ var platformModules = [
 
 /*  */
 
-// the directive module should be applied last, after all
-// built-in modules have been applied.
 var modules = platformModules.concat(baseModules);
 
 var patch = createPatchFunction({ nodeOps: nodeOps, modules: modules });
@@ -7589,7 +7535,6 @@ var patch = createPatchFunction({ nodeOps: nodeOps, modules: modules });
  * properties to Elements.
  */
 
-/* istanbul ignore if */
 if (isIE9) {
   // http://www.matts411.com/post/internet-explorer-9-oninput/
   document.addEventListener('selectionchange', function () {
@@ -7719,7 +7664,6 @@ function trigger (el, type) {
 
 /*  */
 
-// recursively search for possible transition defined inside the component root
 function locateNode (vnode) {
   return vnode.componentInstance && (!vnode.data || !vnode.data.transition)
     ? locateNode(vnode.componentInstance._vnode)
@@ -8145,7 +8089,6 @@ var platformComponents = {
 
 /*  */
 
-// install platform specific utils
 Vue$3.config.mustUseProp = mustUseProp;
 Vue$3.config.isReservedTag = isReservedTag;
 Vue$3.config.isReservedAttr = isReservedAttr;
@@ -8195,7 +8138,6 @@ Vue$3.nextTick(function () {
 
 /*  */
 
-// check whether current browser encodes a char inside attribute values
 function shouldDecode (content, encoded) {
   var div = document.createElement('div');
   div.innerHTML = "<div a=\"" + content + "\"/>";
@@ -8225,8 +8167,8 @@ function parseText (
   if (!tagRE.test(text)) {
     return
   }
-  var tokens = [];
-  var lastIndex = tagRE.lastIndex = 0;
+  var tokens = []; // 存放解析结果
+  var lastIndex = (tagRE.lastIndex = 0);
   var match, index;
   while ((match = tagRE.exec(text))) {
     index = match.index;
@@ -8377,7 +8319,6 @@ var isNonPhrasingTag = makeMap(
  * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
  */
 
-// Regular Expressions for parsing tags and attributes
 var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
 // could use https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-QName
 // but for Vue templates we can enforce a simple charset
@@ -8419,7 +8360,7 @@ function decodeAttr (value, shouldDecodeNewlines) {
 }
 
 function parseHTML (html, options) {
-  var stack = [];
+  var stack = []; // 保存好解析的标签头
   var expectHTML = options.expectHTML;
   var isUnaryTag$$1 = options.isUnaryTag || no;
   var canBeLeftOpenTag$$1 = options.canBeLeftOpenTag || no;
@@ -8511,7 +8452,12 @@ function parseHTML (html, options) {
     } else {
       var endTagLength = 0;
       var stackedTag = lastTag.toLowerCase();
-      var reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'));
+      var reStackedTag =
+        reCache[stackedTag] ||
+        (reCache[stackedTag] = new RegExp(
+          '([\\s\\S]*?)(</' + stackedTag + '[^>]*>)',
+          'i'
+        ));
       var rest$1 = html.replace(reStackedTag, function (all, text, endTag) {
         endTagLength = endTag.length;
         if (!isPlainTextElement(stackedTag) && stackedTag !== 'noscript') {
@@ -8534,7 +8480,11 @@ function parseHTML (html, options) {
 
     if (html === last) {
       options.chars && options.chars(html);
-      if ("development" !== 'production' && !stack.length && options.warn) {
+      if (
+        "development" !== 'production' &&
+        !stack.length &&
+        options.warn
+      ) {
         options.warn(("Mal-formatted tag at end of template: \"" + html + "\""));
       }
       break
@@ -8544,6 +8494,7 @@ function parseHTML (html, options) {
   // Clean up any remaining tags
   parseEndTag();
 
+  // html从n位置开始截取，并且记录索引index的位置
   function advance (n) {
     index += n;
     html = html.substring(n);
@@ -8559,7 +8510,10 @@ function parseHTML (html, options) {
       };
       advance(start[0].length);
       var end, attr;
-      while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+      while (
+        !(end = html.match(startTagClose)) &&
+        (attr = html.match(attribute))
+      ) {
         advance(attr[0].length);
         match.attrs.push(attr);
       }
@@ -8593,22 +8547,29 @@ function parseHTML (html, options) {
       var args = match.attrs[i];
       // hackish work around FF bug https://bugzilla.mozilla.org/show_bug.cgi?id=369778
       if (IS_REGEX_CAPTURING_BROKEN && args[0].indexOf('""') === -1) {
-        if (args[3] === '') { delete args[3]; }
-        if (args[4] === '') { delete args[4]; }
-        if (args[5] === '') { delete args[5]; }
+        if (args[3] === '') {
+          delete args[3];
+        }
+        if (args[4] === '') {
+          delete args[4];
+        }
+        if (args[5] === '') {
+          delete args[5];
+        }
       }
       var value = args[3] || args[4] || args[5] || '';
       attrs[i] = {
         name: args[1],
-        value: decodeAttr(
-          value,
-          options.shouldDecodeNewlines
-        )
+        value: decodeAttr(value, options.shouldDecodeNewlines)
       };
     }
 
     if (!unary) {
-      stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs });
+      stack.push({
+        tag: tagName,
+        lowerCasedTag: tagName.toLowerCase(),
+        attrs: attrs
+      });
       lastTag = tagName;
     }
 
@@ -8641,13 +8602,12 @@ function parseHTML (html, options) {
     if (pos >= 0) {
       // Close all the open elements, up the stack
       for (var i = stack.length - 1; i >= pos; i--) {
-        if ("development" !== 'production' &&
+        if (
+          "development" !== 'production' &&
           (i > pos || !tagName) &&
           options.warn
         ) {
-          options.warn(
-            ("tag <" + (stack[i].tag) + "> has no matching end tag.")
-          );
+          options.warn(("tag <" + (stack[i].tag) + "> has no matching end tag."));
         }
         if (options.end) {
           options.end(stack[i].tag, start, end);
@@ -8674,14 +8634,14 @@ function parseHTML (html, options) {
 
 /*  */
 
-var onRE = /^@|^v-on:/;
-var dirRE = /^v-|^@|^:/;
-var forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/;
+var onRE = /^@|^v-on:/; // @ , v-on 事件语法
+var dirRE = /^v-|^@|^:/; // v- , @ , :  绑定数据和事件
+var forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/; // v-for 属性值 比如 item in items
 var forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/;
-
-var argRE = /:(.*)$/;
-var bindRE = /^:|^v-bind:/;
-var modifierRE = /\.[^.]+/g;
+// 对v-for的扩展 比如参数 (item,index) in items
+var argRE = /:(.*)$/; // :语法
+var bindRE = /^:|^v-bind:/; // : bind 绑定数据语法
+var modifierRE = /\.[^.]+/g; // 修饰符 @click.stop
 
 var decodeHTMLCached = cached(he.decode);
 
@@ -8720,7 +8680,6 @@ function parse (
   options
 ) {
   warn$2 = options.warn || baseWarn;
-
   platformIsPreTag = options.isPreTag || no;
   platformMustUseProp = options.mustUseProp || no;
   platformGetTagNamespace = options.getTagNamespace || no;
@@ -8766,7 +8725,8 @@ function parse (
     start: function start (tag, attrs, unary) {
       // check namespace.
       // inherit parent ns if there is one
-      var ns = (currentParent && currentParent.ns) || platformGetTagNamespace(tag);
+      var ns =
+        (currentParent && currentParent.ns) || platformGetTagNamespace(tag);
 
       // handle IE svg bug
       /* istanbul ignore if */
@@ -8781,11 +8741,13 @@ function parse (
 
       if (isForbiddenTag(element) && !isServerRendering()) {
         element.forbidden = true;
-        "development" !== 'production' && warn$2(
-          'Templates should only be responsible for mapping the state to the ' +
-          'UI. Avoid placing tags with side-effects in your templates, such as ' +
-          "<" + tag + ">" + ', as they will not be parsed.'
-        );
+        "development" !== 'production' &&
+          warn$2(
+            'Templates should only be responsible for mapping the state to the ' +
+              'UI. Avoid placing tags with side-effects in your templates, such as ' +
+              "<" + tag + ">" +
+              ', as they will not be parsed.'
+          );
       }
 
       // apply pre-transforms
@@ -8818,13 +8780,13 @@ function parse (
           if (el.tag === 'slot' || el.tag === 'template') {
             warnOnce(
               "Cannot use <" + (el.tag) + "> as component root element because it may " +
-              'contain multiple nodes.'
+                'contain multiple nodes.'
             );
           }
           if (el.attrsMap.hasOwnProperty('v-for')) {
             warnOnce(
               'Cannot use v-for on stateful component root element because ' +
-              'it renders multiple elements.'
+                'it renders multiple elements.'
             );
           }
         }
@@ -8845,17 +8807,20 @@ function parse (
         } else {
           warnOnce(
             "Component template should contain exactly one root element. " +
-            "If you are using v-if on multiple elements, " +
-            "use v-else-if to chain them instead."
+              "If you are using v-if on multiple elements, " +
+              "use v-else-if to chain them instead."
           );
         }
       }
       if (currentParent && !element.forbidden) {
         if (element.elseif || element.else) {
           processIfConditions(element, currentParent);
-        } else if (element.slotScope) { // scoped slot
+        } else if (element.slotScope) {
+          // scoped slot
           currentParent.plain = false;
-          var name = element.slotTarget || '"default"';(currentParent.scopedSlots || (currentParent.scopedSlots = {}))[name] = element;
+          var name = element.slotTarget || '"default"';(currentParent.scopedSlots || (currentParent.scopedSlots = {}))[
+            name
+          ] = element;
         } else {
           currentParent.children.push(element);
           element.parent = currentParent;
@@ -8894,16 +8859,15 @@ function parse (
               'Component template requires a root element, rather than just text.'
             );
           } else if ((text = text.trim())) {
-            warnOnce(
-              ("text \"" + text + "\" outside root element will be ignored.")
-            );
+            warnOnce(("text \"" + text + "\" outside root element will be ignored."));
           }
         }
         return
       }
       // IE textarea placeholder bug
       /* istanbul ignore if */
-      if (isIE &&
+      if (
+        isIE &&
         currentParent.tag === 'textarea' &&
         currentParent.attrsMap.placeholder === text
       ) {
@@ -8912,17 +8876,25 @@ function parse (
       var children = currentParent.children;
       text = inPre || text.trim()
         ? isTextTag(currentParent) ? text : decodeHTMLCached(text)
-        // only preserve whitespace if its not right after a starting tag
-        : preserveWhitespace && children.length ? ' ' : '';
+        : // only preserve whitespace if its not right after a starting tag
+          preserveWhitespace && children.length ? ' ' : '';
       if (text) {
         var expression;
-        if (!inVPre && text !== ' ' && (expression = parseText(text, delimiters))) {
+        if (
+          !inVPre &&
+          text !== ' ' &&
+          (expression = parseText(text, delimiters))
+        ) {
           children.push({
             type: 2,
             expression: expression,
             text: text
           });
-        } else if (text !== ' ' || !children.length || children[children.length - 1].text !== ' ') {
+        } else if (
+          text !== ' ' ||
+          !children.length ||
+          children[children.length - 1].text !== ' '
+        ) {
           children.push({
             type: 3,
             text: text
@@ -8950,7 +8922,7 @@ function processPre (el) {
 function processRawAttrs (el) {
   var l = el.attrsList.length;
   if (l) {
-    var attrs = el.attrs = new Array(l);
+    var attrs = (el.attrs = new Array(l));
     for (var i = 0; i < l; i++) {
       attrs[i] = {
         name: el.attrsList[i].name,
@@ -8983,7 +8955,9 @@ function processKey (el) {
   var exp = getBindingAttr(el, 'key');
   if (exp) {
     if ("development" !== 'production' && el.tag === 'template') {
-      warn$2("<template> cannot be keyed. Place the key on real elements instead.");
+      warn$2(
+        "<template> cannot be keyed. Place the key on real elements instead."
+      );
     }
     el.key = exp;
   }
@@ -9002,9 +8976,8 @@ function processFor (el) {
   if ((exp = getAndRemoveAttr(el, 'v-for'))) {
     var inMatch = exp.match(forAliasRE);
     if (!inMatch) {
-      "development" !== 'production' && warn$2(
-        ("Invalid v-for expression: " + exp)
-      );
+      "development" !== 'production' &&
+        warn$2(("Invalid v-for expression: " + exp));
       return
     }
     el.for = inMatch[2].trim();
@@ -9050,8 +9023,8 @@ function processIfConditions (el, parent) {
     });
   } else {
     warn$2(
-      "v-" + (el.elseif ? ('else-if="' + el.elseif + '"') : 'else') + " " +
-      "used on element <" + (el.tag) + "> without corresponding v-if."
+      "v-" + (el.elseif ? 'else-if="' + el.elseif + '"' : 'else') + " " +
+        "used on element <" + (el.tag) + "> without corresponding v-if."
     );
   }
 }
@@ -9065,7 +9038,7 @@ function findPrevElement (children) {
       if ("development" !== 'production' && children[i].text !== ' ') {
         warn$2(
           "text \"" + (children[i].text.trim()) + "\" between v-if and v-else(-if) " +
-          "will be ignored."
+            "will be ignored."
         );
       }
       children.pop();
@@ -9093,8 +9066,8 @@ function processSlot (el) {
     if ("development" !== 'production' && el.key) {
       warn$2(
         "`key` does not work on <slot> because slots are abstract outlets " +
-        "and can possibly expand into multiple elements. " +
-        "Use the key on a wrapping element instead."
+          "and can possibly expand into multiple elements. " +
+          "Use the key on a wrapping element instead."
       );
     }
   } else {
@@ -9105,9 +9078,9 @@ function processSlot (el) {
       if ("development" !== 'production' && slotScope) {
         warn$2(
           "the \"scope\" attribute for scoped slots have been deprecated and " +
-          "replaced by \"slot-scope\" since 2.5. The new \"slot-scope\" attribute " +
-          "can also be used on plain elements in addition to <template> to " +
-          "denote scoped slots.",
+            "replaced by \"slot-scope\" since 2.5. The new \"slot-scope\" attribute " +
+            "can also be used on plain elements in addition to <template> to " +
+            "denote scoped slots.",
           true
         );
       }
@@ -9140,7 +9113,7 @@ function processComponent (el) {
 function processAttrs (el) {
   var list = el.attrsList;
   var i, l, name, rawName, value, modifiers, isProp;
-  for (i = 0, l = list.length; i < l; i++) {
+  for ((i = 0), (l = list.length); i < l; i++) {
     name = rawName = list[i].name;
     value = list[i].value;
     if (dirRE.test(name)) {
@@ -9151,7 +9124,8 @@ function processAttrs (el) {
       if (modifiers) {
         name = name.replace(modifierRE, '');
       }
-      if (bindRE.test(name)) { // v-bind
+      if (bindRE.test(name)) {
+        // v-bind
         name = name.replace(bindRE, '');
         value = parseFilters(value);
         isProp = false;
@@ -9172,17 +9146,20 @@ function processAttrs (el) {
             );
           }
         }
-        if (isProp || (
-          !el.component && platformMustUseProp(el.tag, el.attrsMap.type, name)
-        )) {
+        if (
+          isProp ||
+          (!el.component && platformMustUseProp(el.tag, el.attrsMap.type, name))
+        ) {
           addProp(el, name, value);
         } else {
           addAttr(el, name, value);
         }
-      } else if (onRE.test(name)) { // v-on
+      } else if (onRE.test(name)) {
+        // v-on
         name = name.replace(onRE, '');
         addHandler(el, name, value, modifiers, false, warn$2);
-      } else { // normal directives
+      } else {
+        // normal directives
         name = name.replace(dirRE, '');
         // parse arg
         var argMatch = name.match(argRE);
@@ -9202,9 +9179,9 @@ function processAttrs (el) {
         if (expression) {
           warn$2(
             name + "=\"" + value + "\": " +
-            'Interpolation inside attributes has been removed. ' +
-            'Use v-bind or the colon shorthand instead. For example, ' +
-            'instead of <div id="{{ val }}">, use <div :id="val">.'
+              'Interpolation inside attributes has been removed. ' +
+              'Use v-bind or the colon shorthand instead. For example, ' +
+              'instead of <div id="{{ val }}">, use <div :id="val">.'
           );
         }
       }
@@ -9228,7 +9205,9 @@ function parseModifiers (name) {
   var match = name.match(modifierRE);
   if (match) {
     var ret = {};
-    match.forEach(function (m) { ret[m.slice(1)] = true; });
+    match.forEach(function (m) {
+      ret[m.slice(1)] = true;
+    });
     return ret
   }
 }
@@ -9238,7 +9217,9 @@ function makeAttrsMap (attrs) {
   for (var i = 0, l = attrs.length; i < l; i++) {
     if (
       "development" !== 'production' &&
-      map[attrs[i].name] && !isIE && !isEdge
+      map[attrs[i].name] &&
+      !isIE &&
+      !isEdge
     ) {
       warn$2('duplicate attribute: ' + attrs[i].name);
     }
@@ -9255,10 +9236,8 @@ function isTextTag (el) {
 function isForbiddenTag (el) {
   return (
     el.tag === 'style' ||
-    (el.tag === 'script' && (
-      !el.attrsMap.type ||
-      el.attrsMap.type === 'text/javascript'
-    ))
+    (el.tag === 'script' &&
+      (!el.attrsMap.type || el.attrsMap.type === 'text/javascript'))
   )
 }
 
@@ -9284,10 +9263,10 @@ function checkForAliasModel (el, value) {
     if (_el.for && _el.alias === value) {
       warn$2(
         "<" + (el.tag) + " v-model=\"" + value + "\">: " +
-        "You are binding v-model directly to a v-for iteration alias. " +
-        "This will not be able to modify the v-for source array because " +
-        "writing to the alias is like modifying a function local variable. " +
-        "Consider using an array of objects and use v-model on an object property instead."
+          "You are binding v-model directly to a v-for iteration alias. " +
+          "This will not be able to modify the v-for source array because " +
+          "writing to the alias is like modifying a function local variable. " +
+          "Consider using an array of objects and use v-model on an object property instead."
       );
     }
     _el = _el.parent;
@@ -10135,8 +10114,6 @@ function transformSpecialNewlines (text) {
 
 /*  */
 
-// these keywords should not appear inside expressions, but operators like
-// typeof, instanceof and in are allowed
 var prohibitedKeywordRE = new RegExp('\\b' + (
   'do,if,for,let,new,try,var,case,else,with,await,break,catch,class,const,' +
   'super,throw,while,yield,delete,export,import,return,switch,default,' +
@@ -10501,3 +10478,4 @@ Vue$3.compile = compileToFunctions;
 return Vue$3;
 
 })));
+//# sourceMappingURL=vue.js.map

@@ -6,12 +6,18 @@ const replace = require('rollup-plugin-replace')
 const node = require('rollup-plugin-node-resolve')
 const flow = require('rollup-plugin-flow-no-whitespace')
 const version = process.env.VERSION || require('../package.json').version
-const weexVersion = process.env.WEEX_VERSION || require('../packages/weex-vue-framework/package.json').version
+const weexVersion =
+  process.env.WEEX_VERSION ||
+  require('../packages/weex-vue-framework/package.json').version
 
 const banner =
   '/*!\n' +
-  ' * Vue.js v' + version + '\n' +
-  ' * (c) 2014-' + new Date().getFullYear() + ' Evan You\n' +
+  ' * Vue.js v' +
+  version +
+  '\n' +
+  ' * (c) 2014-' +
+  new Date().getFullYear() +
+  ' Evan You\n' +
   ' * Released under the MIT License.\n' +
   ' */'
 
@@ -105,7 +111,9 @@ const builds = {
     entry: resolve('web/entry-compiler.js'),
     dest: resolve('packages/vue-template-compiler/build.js'),
     format: 'cjs',
-    external: Object.keys(require('../packages/vue-template-compiler/package.json').dependencies)
+    external: Object.keys(
+      require('../packages/vue-template-compiler/package.json').dependencies
+    )
   },
   // Web compiler (UMD for in-browser use).
   'web-compiler-browser': {
@@ -121,7 +129,9 @@ const builds = {
     entry: resolve('web/entry-server-renderer.js'),
     dest: resolve('packages/vue-server-renderer/build.js'),
     format: 'cjs',
-    external: Object.keys(require('../packages/vue-server-renderer/package.json').dependencies)
+    external: Object.keys(
+      require('../packages/vue-server-renderer/package.json').dependencies
+    )
   },
   'web-server-basic-renderer': {
     entry: resolve('web/entry-server-basic-renderer.js'),
@@ -135,13 +145,17 @@ const builds = {
     entry: resolve('server/webpack-plugin/server.js'),
     dest: resolve('packages/vue-server-renderer/server-plugin.js'),
     format: 'cjs',
-    external: Object.keys(require('../packages/vue-server-renderer/package.json').dependencies)
+    external: Object.keys(
+      require('../packages/vue-server-renderer/package.json').dependencies
+    )
   },
   'web-server-renderer-webpack-client-plugin': {
     entry: resolve('server/webpack-plugin/client.js'),
     dest: resolve('packages/vue-server-renderer/client-plugin.js'),
     format: 'cjs',
-    external: Object.keys(require('../packages/vue-server-renderer/package.json').dependencies)
+    external: Object.keys(
+      require('../packages/vue-server-renderer/package.json').dependencies
+    )
   },
   // Weex runtime factory
   'weex-factory': {
@@ -164,7 +178,9 @@ const builds = {
     entry: resolve('weex/entry-compiler.js'),
     dest: resolve('packages/weex-template-compiler/build.js'),
     format: 'cjs',
-    external: Object.keys(require('../packages/weex-template-compiler/package.json').dependencies)
+    external: Object.keys(
+      require('../packages/weex-template-compiler/package.json').dependencies
+    )
   }
 }
 
@@ -173,7 +189,7 @@ function genConfig (name) {
   const config = {
     input: opts.entry,
     external: opts.external,
-    souceMap: true,
+    sourceMap: true,
     plugins: [
       replace({
         __WEEX__: !!opts.weex,
@@ -193,9 +209,11 @@ function genConfig (name) {
   }
 
   if (opts.env) {
-    config.plugins.push(replace({
-      'process.env.NODE_ENV': JSON.stringify(opts.env)
-    }))
+    config.plugins.push(
+      replace({
+        'process.env.NODE_ENV': JSON.stringify(opts.env)
+      })
+    )
   }
 
   Object.defineProperty(config, '_name', {

@@ -20,8 +20,8 @@ export function parseText (
   if (!tagRE.test(text)) {
     return
   }
-  const tokens = []
-  let lastIndex = tagRE.lastIndex = 0
+  const tokens = [] // 存放解析结果
+  let lastIndex = (tagRE.lastIndex = 0)
   let match, index
   while ((match = tagRE.exec(text))) {
     index = match.index

@@ -78,11 +78,177 @@ tokens = ['hello,', _s(name), '.'];
 
 
 
-2. `optimize`:优化代码.
+2. `optimize`:优化代码. 将一些静态节点标记,在后面的`patch`环节直接跳过,达到优化目的
 3. `generate`:将优化后的`AST` 转化成`render function`.
 
 源码在
 [src/compiler/index.js](https://github.com/lixiang/vue/blob/9e3c18a3e5beecd8ded269f110852698dacc6eb5/src/compiler/index.js)
+
+
+
+###parse-lite 模板解析精简版
+
+```html
+<div :class="c" class="demo" v-if="isShow"><span v-for="item in sz">{{item}}</span><span>test</span></div>
+```
+通过parseHTML方法解析 标签 class style 指令 text 为 AST为:
+
+```js
+{
+    type:1,
+    tag:"div",
+    parent:null,
+    attrsList:[
+        {
+            name:":class",
+            value:"c"
+        },{
+            name:"class",
+            value:"demo"
+        }
+    ],
+    attrsMap:{
+        :class:"c",
+        class:"demo",
+        v-if:"isShow"
+    },
+    if:"isShow",
+    ifProcessed:true,
+    ifConditions:[
+        {
+            exp:"isShow",
+            ...
+        }
+    ],
+    children:[
+        {
+            type:1,
+            tag:"span",
+            parent:...,
+            attrsList:[],
+            attrsMap:{
+                v-for:"item in sz"
+            },
+            alias:"item",
+            for:"sz",
+            forProcessed:true,
+            children:[
+                {
+                    type:2,
+                    expression:"_s(item)",
+                    text:"{{item}}"
+                }
+            ],
+            ...
+        },
+        {
+            type:1,
+            tag:"span",
+            parent:...,
+            attrsList:[],
+            attrsMap:{},
+            children:[
+                {
+                    type:3,
+                    text:"test"
+                }
+            ]
+            ...
+        }
+    ]
+}
+```
+通过optimize 优化AST,将一些静态节点标记,optimize后AST为
+
+```js
+{
+    type:1,
+    tag:"div",
+    parent:null,
+    static:false,
+    staticRoot:false,
+    attrsList:[
+        {
+            name:":class",
+            value:"c"
+        },{
+            name:"class",
+            value:"demo"
+        }
+    ],
+    attrsMap:{
+        :class:"c",
+        class:"demo",
+        v-if:"isShow"
+    },
+    if:"isShow",
+    ifProcessed:true,
+    ifConditions:[
+        {
+            exp:"isShow",
+            ...
+        }
+    ],
+    children:[
+        {
+            type:1,
+            tag:"span",
+            static:false,
+            parent:...,
+            attrsList:[],
+            attrsMap:{
+                v-for:"item in sz"
+            },
+            alias:"item",
+            for:"sz",
+            forProcessed:true,
+            children:[
+                {
+                    type:2,
+                    static:false,
+                    expression:"_s(item)",
+                    text:"{{item}}"
+                }
+            ],
+            ...
+        },
+        {
+            type:1,
+            tag:"span",
+            parent:...,
+            attrsList:[],
+            attrsMap:{},
+            children:[
+                {
+                    type:3,
+                    static:true,
+                    text:"test"
+                }
+            ]
+            ...
+        }
+    ]
+}
+```
+通过generate 转化为render function
+```js
+with(this){return (isShow)?_c('div,'{
+  staticClass: c,
+  class: demo,
+},_l((sz),function(item){return _c('span,'{
+  staticClass: undefined,
+  class: undefined,
+},_v(_s(item)))}),_c('span,'{
+  staticClass: undefined,
+  class: undefined,
+},_v(undefined))): _e()}
+```
+
+`_c`:createElement创建节点
+`_l`:循环表达式
+`_v`:创建文本节点
+`_s`:值转为字符串
+`_e`: 空节点
 
 ## VDom
 

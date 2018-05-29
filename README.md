@@ -86,7 +86,13 @@ tokens = ['hello,', _s(name), '.'];
 
 
 
-###parse-lite 模板解析精简版
+## parser-lite 模板解析精简版
+
+源码入口:
+
+[example/parser-lite/parser](https://github.com/lixiang/vue/blob/16242d20771c23369f5c60162343149447d97801/examples/parser-lite/parser.js)
+
+
 
 ```html
 <div :class="c" class="demo" v-if="isShow"><span v-for="item in sz">{{item}}</span><span>test</span></div>
